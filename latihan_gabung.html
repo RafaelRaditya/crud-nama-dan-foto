@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD with Image Upload</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h2 class="alert alert-success text-center">CRUD with Image Upload</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <!-- Form CRUD -->
+                <div class="card">
+                    <div class="card-header">
+                        Form CRUD
+                    </div>
+                    <div class="card-body">
+                        <div id="crudApp">
+                            <div>
+                                <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modaltambah">Tambah data</button>
+                            </div>
+                            <table class="table table-striped mt-3">
+                                <thead>
+                                    <tr class="bg-dark text-white">
+                                        <th>No</th>
+                                        <th>Nama depan</th>
+                                        <th>Nama belakang</th>
+                                        <th>Edit</th>
+                                        <th>Hapus</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(item, index) in allData" :key="index">
+                                        <td>{{index+1}}</td>
+                                        <td>{{item.first_name}}</td>
+                                        <td>{{item.last_name}}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-success" @click="editData(item.id,item.first_name, item.last_name)">Edit</button>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger" @click="hapusData(item.id)">Hapus</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <!-- Image Upload -->
+                <div class="card">
+                    <div class="card-header">
+                        Image Upload
+                    </div>
+                    <div class="card-body">
+                        <div id="uploadApp">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label for="file">Select Image</label>
+                                        <input type="file" class="form-control-file" ref="file">
+                                    </div>
+                                    <button class="btn btn-primary" @click="uploadImage">Upload Image</button>
+                                </div>
+                                <div v-if="successAlert" class="alert alert-success alert-dismissible text-center">
+                                    <a href="#" class="close" aria-label="close" @click="successAlert=false">&times;</a>
+                                    <strong>Success!</strong> {{ successMessage }}
+                                </div>
+                                <div v-if="errorAlert" class="alert alert-danger alert-dismissible">
+                                    <a href="#" class="close" aria-label="close" @click="errorAlert=false">&times;</a>
+                                    {{ errorMessage }}
+                                </div>
+                                <div v-html="uploadedImage" align="center"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah -->
+    <div class="modal fade" id="modaltambah" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Form Tambah</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Form tambah data -->
+                    <div class="form-group">
+                        <label for="inputFirstName">Nama Depan</label>
+                        <input type="text" class="form-control" id="inputFirstName" v-model="first_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputLastName">Nama Belakang</label>
+                        <input type="text" class="form-control" id="inputLastName" v-model="last_name">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" @click="simpanData">Kirim</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        var application = new Vue({
+            el:'#uploadApp',
+            data:{
+                file:'',
+                successAlert:false,
+                errorAlert:false,
+                successMessage:'',
+                errorMessage:'',
+                uploadedImage:'',
+                allData: "",
+                first_name: "",
+                last_name: "",
+                    id: "",
+                
+            },
+            methods:{
+                  // method untuk menampilkan data
+                  fetchAllData: function(){
+                    axios
+                        .post ("action.php",{
+                            action: "fetchall",
+                        })
+                        .then(function (response){
+            // respon adalah data yang berhasil diambil dari database
+            // respon.data adalah data yang dimasukkan ke dalam variabel allData
+            // allData akan di looping di tabel lainnya
+                            app.allData = response.data;
+                        });
+                },
+            //metode untuk insert data
+                simpanData: function(){
+                if(app.first_name == '' || app.last_name == ''){
+                alert('isi semua data terlebih dahulu!');
+                }else{
+                axios
+                .post("action.php", {
+                action: "insert",
+                first_name: app.first_name,
+                last_name: app.last_name
+                })
+                .then(function (response){
+            //memperbarui data
+                app.fetchAllData()
+            //menutup modal
+
+                $("#modaltambah").modal("hide");
+            //mengosongkan isi form
+                app.first_name = ''
+                app.last_name = ''
+                });
+        }
+    },
+            //isi form saat modal edit tampil
+                editData: function(id, first_name, last_name){
+            //isi input id
+                app.id = id
+            //isi input nama depan
+                app.first_name = first_name
+            //isi input nama belakang
+                app.last_name = last_name
+                },
+            //metode untuk update data
+                updateData: function(){
+                if(app.id == '' || app.first_name == '' || app.last_name == ''){
+                alert('isi semua data terlebih dahulu!');
+                }else{
+                    axios
+                .post("action.php", {
+                action: "update",
+                id: app.id,
+                first_name: app.first_name,
+                last_name: app.last_name
+                })
+                .then(function (response){
+            //memperbarui data
+                app.fetchAllData()
+            //menutup modal
+                $("#modaledit").modal("hide");
+            //mengosongkan isi form
+                app.id = ''
+                app.first_name = ''
+                app.last_name = ''
+                });
+            }
+        },
+        hapusData: function(id, first_name, last_name){
+            //isi input id
+                app.id = id
+
+                },
+                deleteData: function(){
+                if(app.id == ''){
+                alert('Tidak ada yang perlu dihapus!');
+                }else{
+                axios
+                .post("action.php", {
+                action: "delete",
+                id: app.id
+                })
+                .then(function (response){
+            //memperbarui data
+                app.fetchAllData()
+            //menutup modal
+
+                $("#modalhapus").modal("hide");
+                });
+        }
+    },
+                uploadImage:function(){
+                    application.file = application.$refs.file.files[0];
+                    var formData = new FormData();
+                    formData.append('file', application.file);
+                    axios.post('upload.php', formData, {
+                        headers:{
+                            'Content-Type' : 'multipart/form-data'
+                        }
+                    }).then(function(response){
+                        if(response.data.image == '')
+                        {
+                            application.errorAlert = true;
+                            application.successAlert = false;
+                            application.errorMessage = response.data.message;
+                            application.successMessage = '';
+                            application.uploadedImage = '';
+                        }
+                        else
+                        {
+                            application.errorAlert = false;
+                            application.successAlert = true;
+                            application.errorMessage = '';
+                            application.successMessage = response.data.message;
+                            var image_html = "<img src='"+response.data.image+"' class='img-thumbnail' width='200'>";
+                            application.uploadedImage = image_html;
+                            application.$refs.file.value = '';
+                        }
+                    });
+                }
+            },
+        });
+    </script>
+</body>
+</html>
